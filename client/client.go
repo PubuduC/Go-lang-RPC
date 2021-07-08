@@ -104,8 +104,8 @@ func main() {
 		} else {
 			fmt.Printf("Vegetable '%s' updated \n", veg.Name)
 			fmt.Fprintf(writer, "Vegetable '%s' updated \n", veg.Name)
-			fmt.Fprintf(writer, "Available amount in kg: %f \n", veg.AvailableAmountOfKg)
-			fmt.Fprintf(writer, "Price per kg: %f \n", veg.PricePerKg)
+			fmt.Fprintf(writer, "Available amount in kg: %.2f \n", veg.AvailableAmountOfKg)
+			fmt.Fprintf(writer, "Price per kg: %.2f \n", veg.PricePerKg)
 		}
 	})
 
@@ -146,7 +146,7 @@ func main() {
 		if err := client.Call("Market.GetAll", "just a string", &vegNames); err != nil {
 			fmt.Fprint(writer, err)
 		} else {
-			fmt.Fprintf(writer, "%d No. of Vegetables found \n", len(strings.Split(vegNames, ",")))
+			fmt.Fprintf(writer, "%d No. of Vegetables found \n", len(strings.Split(vegNames, ","))-1)
 			fmt.Fprint(writer, vegNames)
 		}
 	})
@@ -154,4 +154,5 @@ func main() {
 	http.ListenAndServe(":7000", mux)
 
 }
+
 

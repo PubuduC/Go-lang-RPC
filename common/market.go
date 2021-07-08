@@ -4,8 +4,10 @@ import (
 	"encoding/csv"
 	"fmt"
 	"github.com/gocarina/gocsv"
+	"github.com/subchen/go-trylock"
 	"log"
 	"os"
+	"time"
 )
 
 // Vegetable struct represent a vegetable
@@ -20,7 +22,12 @@ type Market struct {
 	database []*Vegetable
 }
 
+var mu = trylock.New()
+
 func writeCsvFile(newVegs []*Vegetable) []*Vegetable {
+	if ok := mu.TryLockTimeout(3 * time.Second); !ok {
+		return nil
+	}
 	err := os.Remove("common/data.csv")
 
 	if err != nil {
@@ -35,16 +42,21 @@ func writeCsvFile(newVegs []*Vegetable) []*Vegetable {
 	writer.Write([]string{"Name", "PricePerKg", "AvailableAmountOfKg"})
 
 	for _, veg := range newVegs {
-		row := []string{veg.Name, fmt.Sprintf("%f", veg.PricePerKg), fmt.Sprintf("%f", veg.AvailableAmountOfKg)}
+		row := []string{veg.Name, fmt.Sprintf("%.2f", veg.PricePerKg), fmt.Sprintf("%.2f", veg.AvailableAmountOfKg)}
 		_ = writer.Write(row)
 	}
 	writer.Flush()
 
 	f.Close()
+	mu.Unlock()
 	return newVegs
 }
 
 func readCsvFile(filePath string) []*Vegetable {
+	if ok := mu.RTryLockTimeout(1 * time.Second); !ok {
+		return nil
+	}
+	defer mu.RUnlock()
 	f, err := os.OpenFile("common/data.csv", os.O_CREATE|os.O_RDONLY, 0644)
 
 	//f, err := os.Open(filePath)
@@ -58,9 +70,6 @@ func readCsvFile(filePath string) []*Vegetable {
 	if err := gocsv.UnmarshalFile(f, &vegetables); err != nil {
 		log.Print(err)
 		return nil
-	}
-	for _, veg := range vegetables {
-		fmt.Println("Hello, ", veg.Name)
 	}
 
 	return vegetables
@@ -224,6 +233,7 @@ func appendVegetableToCsv(vegetable *Vegetable)  {
 	writer.Flush()
 	defer f.Close()
 }
+
 
 
 
