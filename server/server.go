@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	// create a `*College` object
+	// create a `*Market` object
 	market := common.NewMarket()
 
 	// register `market` object with `rpc.DefaultServer`
